@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import { suite, test } from 'mocha';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as vscode from 'vscode';
@@ -297,6 +298,21 @@ suite('Tab Group extension', () => {
       command: string;
       when?: string;
     }>;
+    for (const command of [
+      'tabsTreeView.tab.ungroup',
+      'tabsTreeView.group.rename',
+      'tabsTreeView.group.sortTabsAscending',
+      'tabsTreeView.group.sortTabsDescending',
+      'tabsTreeView.group.save',
+      'tabsTreeView.group.cancelGroup',
+      'tabsTreeView.group.close',
+    ]) {
+      assert.equal(
+        commandPaletteMenus.find(menu => menu.command === command)?.when,
+        'false',
+        `${command} should only be available from a tree item`,
+      );
+    }
     assert.ok(
       commandPaletteMenus.some(
         menu =>
@@ -1070,6 +1086,29 @@ suite('Tab Group extension', () => {
         label: 'Compare notebooks',
       },
     ]);
+  });
+
+  test('decorates dirty resource-backed tabs from native tab state', () => {
+    const uri = vscode.Uri.file('/workspace/dirty.txt');
+    const tabs = [
+      { input: new vscode.TabInputText(uri), label: 'Text' },
+      { input: new vscode.TabInputTextDiff(uri, uri), label: 'Text Diff' },
+      { input: new vscode.TabInputCustom(uri, 'example.custom'), label: 'Custom' },
+      { input: new vscode.TabInputNotebook(uri, 'jupyter-notebook'), label: 'Notebook' },
+      {
+        input: new vscode.TabInputNotebookDiff(uri, uri, 'jupyter-notebook'),
+        label: 'Notebook Diff',
+      },
+    ].map(tab => ({ ...tab, isDirty: true }) as vscode.Tab);
+
+    for (const tab of tabs) {
+      const treeItem = getHandler(tab)?.createTreeItem(tab);
+      assert.ok(treeItem);
+      assert.match(String(treeItem.label), /^⦿ /);
+      assert.equal(treeItem.tooltip, 'Unsaved');
+      assert.ok(treeItem.iconPath instanceof vscode.ThemeIcon);
+      assert.equal(treeItem.iconPath.color?.id, 'charts.orange');
+    }
   });
 
   test('saves restorable tabs while skipping live-only system tabs', async () => {

@@ -12,7 +12,6 @@ import { RecentTabsTreeDataProvider } from './RecentTabsTreeDataProvider';
 import { SavedGroupsTreeDataProvider } from './SavedGroupsTreeDataProvider';
 import { Disposable } from '../utils/disposable';
 import { ContextKeys, setContext } from '../utils/context';
-import { getTabFileDecorationProvider } from '../decorators/TabFileDecorationProvider';
 import { GroupColorId, groupColorOptions } from '../utils/color';
 import { getSavedTabId, getSavedTabLabel } from '../utils/savedTab';
 import {
@@ -110,17 +109,6 @@ export class TabsView extends Disposable {
       this.treeDataProvider.onDidChangeState(() => {
         this.saveState(this.treeDataProvider.getState());
         this.recentTabsTreeDataProvider.refresh();
-      }),
-    );
-
-    const tabFileDecorationProvider = this._register(getTabFileDecorationProvider());
-
-    this._register(
-      tabFileDecorationProvider.onDidChangeFileDecorations(uris => {
-        if (uris.length > 0) {
-          this.treeDataProvider.triggerRerender();
-          this.recentTabsTreeDataProvider.refresh();
-        }
       }),
     );
 
@@ -254,9 +242,9 @@ export class TabsView extends Disposable {
     );
 
     this._register(
-      vscode.commands.registerCommand('tabsTreeView.group.close', (group: Group) => {
-        vscode.window.tabGroups.close(group.children.map((tab: Tab) => getNativeTabs(tab)).flat());
-      }),
+      vscode.commands.registerCommand('tabsTreeView.group.close', (group: Group) =>
+        vscode.window.tabGroups.close(group.children.map((tab: Tab) => getNativeTabs(tab)).flat()),
+      ),
     );
 
     this._register(

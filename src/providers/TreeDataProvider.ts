@@ -100,12 +100,15 @@ export class TreeDataProvider
 
   getTreeItem(element: TreeElement): vscode.TreeItem {
     if (element.type === TreeItemType.Tab) {
-      const newTreeItem = this.createTabTreeItem(element);
       const tabId = element.id;
+      if (!this.treeItemMap[tabId]) {
+        this.treeItemMap[tabId] = this.createTabTreeItem(element);
+      }
+      const treeItem = this.treeItemMap[tabId];
 
-      newTreeItem.contextValue = element.groupId === null ? 'tab' : 'grouped-tab';
+      treeItem.contextValue = element.groupId === null ? 'tab' : 'grouped-tab';
 
-      const resourceUri = newTreeItem.resourceUri;
+      const resourceUri = treeItem.resourceUri;
       const isExternalResource =
         resourceUri !== undefined && vscode.workspace.getWorkspaceFolder(resourceUri) === undefined;
 
@@ -122,16 +125,12 @@ export class TreeDataProvider
         }
       }
 
-      if (!this.treeItemMap[tabId]) {
-        this.treeItemMap[tabId] = newTreeItem;
-      }
-
-      if (isExternalResource && this.treeItemMap[tabId].tooltip === undefined) {
-        this.treeItemMap[tabId].tooltip =
+      if (isExternalResource && treeItem.tooltip === undefined) {
+        treeItem.tooltip =
           resourceUri.scheme === 'file' ? resourceUri.fsPath : resourceUri.toString();
       }
 
-      return this.treeItemMap[tabId];
+      return treeItem;
     }
 
     if (element.type === TreeItemType.Slot) {
