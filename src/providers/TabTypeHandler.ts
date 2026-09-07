@@ -186,7 +186,7 @@ export class TabInputTextHandler implements TabTypeHandler<vscode.TabInputText> 
     const treeItem = new vscode.TreeItem(tab.input.uri);
 
     treeItem.label = tab.label;
-    setTabDecoration(treeItem, tab, 'file');
+    setTabDecoration(treeItem, tab);
 
     return treeItem;
   }
@@ -269,7 +269,7 @@ export class TabInputTextDiffHandler implements TabTypeHandler<vscode.TabInputTe
         path.join(...modifiedFilePathArray.slice(commonAncestorDirIndex + 1, -1));
     }
 
-    setTabDecoration(treeItem, tab, 'diff');
+    setTabDecoration(treeItem, tab);
 
     return treeItem;
   }
@@ -333,7 +333,7 @@ export class TabInputNotebookDiffHandler implements TabTypeHandler<vscode.TabInp
   createTreeItem(tab: TypedTab<vscode.TabInputNotebookDiff>): vscode.TreeItem {
     const treeItem = new vscode.TreeItem(tab.input.modified);
     treeItem.label = tab.label;
-    setTabDecoration(treeItem, tab, 'diff');
+    setTabDecoration(treeItem, tab);
 
     return treeItem;
   }

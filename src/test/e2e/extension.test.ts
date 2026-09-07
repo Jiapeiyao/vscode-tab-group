@@ -1088,7 +1088,7 @@ suite('Tab Group extension', () => {
     ]);
   });
 
-  test('decorates dirty resource-backed tabs from native tab state', () => {
+  test('decorates dirty and pinned resource-backed tabs from native tab state', () => {
     const uri = vscode.Uri.file('/workspace/dirty.txt');
     const tabs = [
       { input: new vscode.TabInputText(uri), label: 'Text' },
@@ -1104,11 +1104,20 @@ suite('Tab Group extension', () => {
     for (const tab of tabs) {
       const treeItem = getHandler(tab)?.createTreeItem(tab);
       assert.ok(treeItem);
-      assert.match(String(treeItem.label), /^⦿ /);
-      assert.equal(treeItem.tooltip, 'Unsaved');
+      assert.match(String(treeItem.label), /^● /);
       assert.ok(treeItem.iconPath instanceof vscode.ThemeIcon);
       assert.equal(treeItem.iconPath.color?.id, 'charts.orange');
     }
+
+    const textHandler = getHandler(tabs[0]);
+    assert.ok(textHandler);
+    const pinnedTab = { ...tabs[0], isDirty: false, isPinned: true } as vscode.Tab;
+    const dirtyPinnedTab = { ...tabs[0], isPinned: true } as vscode.Tab;
+    const pinnedTreeItem = textHandler.createTreeItem(pinnedTab);
+
+    assert.match(String(pinnedTreeItem.label), /^📌︎ /);
+    assert.equal(pinnedTreeItem.iconPath, undefined);
+    assert.match(String(textHandler.createTreeItem(dirtyPinnedTab).label), /^📌︎● /);
   });
 
   test('saves restorable tabs while skipping live-only system tabs', async () => {
