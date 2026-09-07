@@ -1163,6 +1163,19 @@ suite('Tab Group extension', () => {
     }
   });
 
+  test('omits an uninformative description for a same-path text diff', () => {
+    const uri = vscode.Uri.file('/workspace/same.txt');
+    const tab = {
+      input: new vscode.TabInputTextDiff(uri, uri),
+      label: 'Text Diff',
+    } as vscode.Tab;
+
+    const treeItem = getHandler(tab)?.createTreeItem(tab);
+
+    assert.ok(treeItem);
+    assert.equal(treeItem.description, undefined);
+  });
+
   test('keeps live-only tabs in an existing group when restoring saved tabs', () => {
     const groupId = `tab-group-restore-system-tab-${Date.now()}`;
     const systemTab: Tab = { type: TreeItemType.Tab, groupId, id: 'Settings' };

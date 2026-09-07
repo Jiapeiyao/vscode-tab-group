@@ -252,21 +252,25 @@ export class TabInputTextDiffHandler implements TabTypeHandler<vscode.TabInputTe
     const treeItem = new vscode.TreeItem(tab.input.modified);
     treeItem.label = tab.label;
 
-    // generate discription
-    const originalFilePathArray = tab.input.original.fsPath.split(path.sep);
-    const modifiedFilePathArray = tab.input.modified.fsPath.split(path.sep);
-    const filePathArray = [];
-    filePathArray.push(originalFilePathArray);
-    filePathArray.push(modifiedFilePathArray);
-    if (
-      originalFilePathArray[originalFilePathArray.length - 1] ==
-      modifiedFilePathArray[modifiedFilePathArray.length - 1]
-    ) {
-      const commonAncestorDirIndex = findLongestCommonFilePathPrefixIndex(filePathArray);
-      treeItem.description =
-        path.join(...originalFilePathArray.slice(commonAncestorDirIndex + 1, -1)) +
-        ' - ' +
-        path.join(...modifiedFilePathArray.slice(commonAncestorDirIndex + 1, -1));
+    if (tab.input.original.fsPath !== tab.input.modified.fsPath) {
+      const originalFilePathArray = tab.input.original.fsPath.split(path.sep);
+      const modifiedFilePathArray = tab.input.modified.fsPath.split(path.sep);
+      if (
+        originalFilePathArray[originalFilePathArray.length - 1] ===
+        modifiedFilePathArray[modifiedFilePathArray.length - 1]
+      ) {
+        const commonAncestorDirIndex = findLongestCommonFilePathPrefixIndex([
+          originalFilePathArray,
+          modifiedFilePathArray,
+        ]);
+        const originalDirectory = path.join(
+          ...originalFilePathArray.slice(commonAncestorDirIndex + 1, -1),
+        );
+        const modifiedDirectory = path.join(
+          ...modifiedFilePathArray.slice(commonAncestorDirIndex + 1, -1),
+        );
+        treeItem.description = `${originalDirectory} - ${modifiedDirectory}`;
+      }
     }
 
     setTabDecoration(treeItem, tab);
