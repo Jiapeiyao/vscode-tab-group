@@ -1104,20 +1104,25 @@ suite('Tab Group extension', () => {
     for (const tab of tabs) {
       const treeItem = getHandler(tab)?.createTreeItem(tab);
       assert.ok(treeItem);
-      assert.match(String(treeItem.label), /^● /);
-      assert.ok(treeItem.iconPath instanceof vscode.ThemeIcon);
-      assert.equal(treeItem.iconPath.color?.id, 'charts.orange');
+      assert.match(String(treeItem.label), /^⏺ /);
+      assert.equal(treeItem.iconPath, undefined);
     }
 
     const textHandler = getHandler(tabs[0]);
     assert.ok(textHandler);
+    const cleanTab = { ...tabs[0], isDirty: false } as vscode.Tab;
     const pinnedTab = { ...tabs[0], isDirty: false, isPinned: true } as vscode.Tab;
     const dirtyPinnedTab = { ...tabs[0], isPinned: true } as vscode.Tab;
+    const cleanTreeItem = textHandler.createTreeItem(cleanTab);
     const pinnedTreeItem = textHandler.createTreeItem(pinnedTab);
 
+    assert.equal(cleanTreeItem.label, 'Text');
+    assert.equal(cleanTreeItem.iconPath, undefined);
     assert.match(String(pinnedTreeItem.label), /^📌︎ /);
     assert.equal(pinnedTreeItem.iconPath, undefined);
-    assert.match(String(textHandler.createTreeItem(dirtyPinnedTab).label), /^📌︎● /);
+    const dirtyPinnedTreeItem = textHandler.createTreeItem(dirtyPinnedTab);
+    assert.match(String(dirtyPinnedTreeItem.label), /^📌︎⏺ /);
+    assert.equal(dirtyPinnedTreeItem.iconPath, undefined);
   });
 
   test('saves restorable tabs while skipping live-only system tabs', async () => {
