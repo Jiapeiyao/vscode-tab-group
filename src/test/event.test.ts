@@ -1,5 +1,5 @@
 import { describe, expect, jest, test } from '@jest/globals';
-import { ExclusiveHandle } from '../utils/event';
+import { ExclusiveHandle, ExclusiveHandlePriority } from '../utils/event';
 
 describe('ExclusiveHandle', () => {
   test('runs the latest action requested while another action is active', async () => {
@@ -25,6 +25,7 @@ describe('ExclusiveHandle', () => {
 
     await Promise.resolve();
     expect(actions).toEqual(['first:start']);
+    expect(second).toBe(latest);
     releaseFirstAction();
     await Promise.all([first, second, latest]);
 
@@ -50,5 +51,33 @@ describe('ExclusiveHandle', () => {
     await expect(first).rejects.toThrow('activation failed');
     await expect(second).resolves.toBeUndefined();
     expect(pending).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not replace a pending user action with a later normal action', async () => {
+    const handle = new ExclusiveHandle();
+    const actions: string[] = [];
+    let releaseActiveAction!: () => void;
+    const activeActionReleased = new Promise<void>(resolve => {
+      releaseActiveAction = resolve;
+    });
+
+    const active = handle.run(async () => {
+      actions.push('activate-a:start');
+      await activeActionReleased;
+      actions.push('activate-a:end');
+    });
+    const userSelection = handle.run(async () => {
+      actions.push('activate-b');
+    }, ExclusiveHandlePriority.UserAction);
+    const staleReveal = jest.fn(async () => {
+      actions.push('reveal-a');
+    });
+    const reveal = handle.run(staleReveal);
+
+    releaseActiveAction();
+    await Promise.all([active, userSelection, reveal]);
+
+    expect(staleReveal).not.toHaveBeenCalled();
+    expect(actions).toEqual(['activate-a:start', 'activate-a:end', 'activate-b']);
   });
 });

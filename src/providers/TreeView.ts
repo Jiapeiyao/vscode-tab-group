@@ -3,7 +3,7 @@ import { getNormalizedTabId, matchesTabId, reopenSavedTab, toSavedTab } from './
 import { WorkspaceStateStore } from '../services/WorkspaceStateStore';
 import { SavedGroupsStore } from '../services/SavedGroupsStore';
 import { RecentTabs } from '../services/RecentTabs';
-import { ExclusiveHandle } from '../utils/event';
+import { ExclusiveHandle, ExclusiveHandlePriority } from '../utils/event';
 import { asPromise } from '../utils/async';
 import { Group, isGroup, isTab, Tab, TreeElement, TreeItemType, ViewMode } from '../models/types';
 import { SavedGroup, SavedTab } from '../models/SavedGroup';
@@ -335,7 +335,10 @@ export class TabsView extends Disposable {
         const selectedTab = getSelectedTab(e.selection);
         this.selectedTab = selectedTab;
         if (selectedTab) {
-          this.exclusiveHandle.run(() => asPromise(this.treeDataProvider.activate(selectedTab)));
+          this.exclusiveHandle.run(
+            () => asPromise(this.treeDataProvider.activate(selectedTab)),
+            ExclusiveHandlePriority.UserAction,
+          );
         }
       }),
     );
@@ -349,7 +352,10 @@ export class TabsView extends Disposable {
         setContext(ContextKeys.SelectedGroup, Boolean(this.selectedGroup));
 
         if (selectedTab) {
-          this.exclusiveHandle.run(() => asPromise(this.treeDataProvider.activate(selectedTab)));
+          this.exclusiveHandle.run(
+            () => asPromise(this.treeDataProvider.activate(selectedTab)),
+            ExclusiveHandlePriority.UserAction,
+          );
         }
       }),
     );
