@@ -456,6 +456,38 @@ suite('Tab Group extension', () => {
     }
   });
 
+  test('shows the shortest distinguishing directories for duplicate filenames', async () => {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    assert.ok(workspaceRoot, 'The extension host should have a workspace folder.');
+    const directoryUri = vscode.Uri.joinPath(
+      workspaceRoot,
+      `.tab-group-duplicate-names-${Date.now()}`,
+    );
+    const firstUri = vscode.Uri.joinPath(directoryUri, 'feature', 'src', 'index.ts');
+    const secondUri = vscode.Uri.joinPath(directoryUri, 'shared', 'src', 'index.ts');
+    const firstTab: Tab = { type: TreeItemType.Tab, groupId: null, id: firstUri.toString() };
+    const secondTab: Tab = { type: TreeItemType.Tab, groupId: null, id: secondUri.toString() };
+    const treeDataProvider = new TreeDataProvider();
+
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(directoryUri, 'feature', 'src'));
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(directoryUri, 'shared', 'src'));
+    await vscode.workspace.fs.writeFile(firstUri, Buffer.from(firstUri.fsPath));
+    await vscode.workspace.fs.writeFile(secondUri, Buffer.from(secondUri.fsPath));
+
+    try {
+      await vscode.commands.executeCommand('vscode.open', firstUri, { preview: false });
+      await vscode.commands.executeCommand('vscode.open', secondUri, { preview: false });
+      treeDataProvider.setState([firstTab, secondTab]);
+
+      assert.equal(treeDataProvider.getTreeItem(firstTab).description, 'feature/src');
+      assert.equal(treeDataProvider.getTreeItem(secondTab).description, 'shared/src');
+    } finally {
+      treeDataProvider.dispose();
+      await closeTabs([firstUri.toString(), secondUri.toString()]);
+      await vscode.workspace.fs.delete(directoryUri, { recursive: true, useTrash: false });
+    }
+  });
+
   test('keeps root and group URI sort directions independent', async () => {
     const extension = vscode.extensions.getExtension('jiapeiyao.tab-group');
     const firstGroup: Group = {
