@@ -309,7 +309,10 @@ export class TabsView extends Disposable {
         this.revealActiveTab(view, findActiveItem(e.changed));
 
         this.treeDataProvider.triggerRerender();
-        this.refreshRecentTabs(this.getActiveNativeTab());
+        const recentTabsChanged = this.refreshRecentTabs(this.getActiveNativeTab());
+        if (!recentTabsChanged) {
+          this.recentTabsTreeDataProvider.refresh();
+        }
         if (openedTabsChanged || closedTabsChanged) {
           this.saveState(this.treeDataProvider.getState());
         }
@@ -914,7 +917,7 @@ export class TabsView extends Disposable {
       );
   }
 
-  private refreshRecentTabs(activeTab: vscode.Tab | undefined): void {
+  private refreshRecentTabs(activeTab: vscode.Tab | undefined): boolean {
     const nativeTabIds = this.collectNativeTabIds(this.getNativeTabs());
 
     let changed = this.recentTabs.reconcile([...nativeTabIds]);
@@ -933,6 +936,7 @@ export class TabsView extends Disposable {
       this.saveRecentTabs();
       this.recentTabsTreeDataProvider.refresh();
     }
+    return changed;
   }
 
   private getNativeTabs(): vscode.Tab[] {

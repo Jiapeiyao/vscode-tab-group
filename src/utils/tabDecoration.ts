@@ -5,8 +5,23 @@ export function setTabDecoration(treeItem: vscode.TreeItem, tab: vscode.Tab): vo
     return;
   }
 
-  if (treeItem.label) {
-    const prefix = tab.isPinned ? (tab.isDirty ? '📌︎⏺' : '📌︎') : '⏺';
-    treeItem.label = `${prefix} ${treeItem.label}`;
+  const label = treeItem.label;
+  if (!label) {
+    return;
   }
+
+  const prefix = tab.isPinned ? (tab.isDirty ? '📌︎⏺' : '📌︎') : '⏺';
+  if (typeof label === 'string') {
+    treeItem.label = `${prefix} ${label}`;
+    return;
+  }
+
+  const labelOffset = prefix.length + 1;
+  treeItem.label = {
+    label: `${prefix} ${label.label}`,
+    highlights: label.highlights?.map(([start, end]): [number, number] => [
+      start + labelOffset,
+      end + labelOffset,
+    ]),
+  };
 }

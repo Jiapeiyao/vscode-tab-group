@@ -24,6 +24,7 @@ import { SavedGroupsTreeDataProvider } from '../../providers/SavedGroupsTreeData
 import { SavedGroupsStore } from '../../services/SavedGroupsStore';
 import { findActiveItem } from '../../utils/tabSelection';
 import { ContextKeys, getContext } from '../../utils/context';
+import { setTabDecoration } from '../../utils/tabDecoration';
 
 function getOpenTabIds(): Set<string> {
   return new Set(
@@ -1123,6 +1124,15 @@ suite('Tab Group extension', () => {
     const dirtyPinnedTreeItem = textHandler.createTreeItem(dirtyPinnedTab);
     assert.match(String(dirtyPinnedTreeItem.label), /^📌︎⏺ /);
     assert.equal(dirtyPinnedTreeItem.iconPath, undefined);
+
+    const richLabel = { label: 'Text', highlights: [[0, 4] as [number, number]] };
+    const richLabelTreeItem = new vscode.TreeItem(richLabel);
+    setTabDecoration(richLabelTreeItem, tabs[0]);
+    assert.deepStrictEqual(richLabelTreeItem.label, {
+      label: '⏺ Text',
+      highlights: [[2, 6]],
+    });
+    assert.deepStrictEqual(richLabel, { label: 'Text', highlights: [[0, 4]] });
   });
 
   test('saves restorable tabs while skipping live-only system tabs', async () => {
